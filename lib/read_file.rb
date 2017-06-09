@@ -33,10 +33,12 @@ class ReadFile
            result = r.gsub(/\t/,'').strip
            if result.split(' ').size == 3 and mp_res = $all_mp.serch_mp(result)
                votes.last[:votes] << {mp: mp_res}
-           elsif result == "Горошко Елена Игорьевна" or result == "Дегтярев Николай Иванович" or result == "Коринько Иван Васильевич" or result == "Лесик Андрей Анатольевич"
+           elsif result == "Дегтярев Николай Иванович" or result == "Коринько Иван Васильевич" or result == "Лесик Андрей Анатольевич"
               votes.last[:votes] << {mp: result}
            elsif result == "Зинченко Владимир Анатольевич"
-             votes.last[:votes] << {mp: "Зинченко Владимир Анатолиевич"}
+             votes.last[:votes] << {mp: 3027}
+           elsif result == "Горошко Елена Игорьевна"
+             votes.last[:votes] << {mp: 3018}
            elsif result.split(' ').size < 3
              votes.last[:votes].last[:vote] = result
            else

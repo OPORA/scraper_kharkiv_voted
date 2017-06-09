@@ -40,7 +40,15 @@ class ReadFile
            elsif result.split(' ').size < 3
              votes.last[:votes].last[:vote] = result
            else
-             votes << {name: r.strip, votes: []}
+             unless votes.empty?
+               if votes.last[:votes].empty?
+                 votes.last[:name] = votes.last[:name] + " " + r.strip
+               else
+                 votes << {name: r.strip, votes: []}
+               end
+             else
+               votes << {name: r.strip, votes: []}
+             end
            end
          end
        end

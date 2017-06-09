@@ -2,35 +2,49 @@ require 'yomu'
 class ReadFile
   def rtf(file_name)
     votes = []
+    p file_name
     yomu = Yomu.new file_name
-     if yomu.text[/\nУКРАЇНА\n\sЛЬВІВСЬКА МІСЬКА РАДА/]
-       text_pages = yomu.text.split(/\nУКРАЇНА\n\sЛЬВІВСЬКА МІСЬКА РАДА/)
-     elsif yomu.text[/ЛЬВІВСЬКА МІСЬКА РАДА\n\n ПОІМЕННЕ ГОЛОСУВАННЯ/]
-       text_pages = yomu.text.split(/ЛЬВІВСЬКА МІСЬКА РАДА\n\n ПОІМЕННЕ ГОЛОСУВАННЯ/)
-     elsif yomu.text[/ЛЬВІВСЬКА МІСЬКА РАДА\n\n ВІДКРИТЕ ГОЛОСУВАННЯ/]
-       text_pages = yomu.text.split(/ЛЬВІВСЬКА МІСЬКА РАДА\n\n ВІДКРИТЕ ГОЛОСУВАННЯ/)
-     else
-       raise yomu.text
-     end
-    text_pages.each do |page|
-     next if page == ""
-     next if page[/^\n\s$/]
-     vote = {}
-     vote[:datetime] = page[/^від.+/].gsub(/від/,'').strip
-     # vote[:name] = yomu.text.split(/\n/).find{|str| str.strip[/^\d+\.\s/]}.strip.gsub(/^\d+\.\s/,'').strip
-     vote[:voteds] = []
-     paragraf =  page.gsub(/\n/, '\n')
-     paragraf[/Вибір.+(УСЬОГО:|ВСЬОГО:)/].gsub(/\s{2,}/, ' ').gsub(/(Вибір|УСЬОГО:|ВСЬОГО:)/,'').split(/\\n/).each do |v|
-       next if v.strip.size==0
-       voted = v.strip
-       if voted[/\d+/]
-         vote[:voteds] << []
-       else
-         vote[:voteds].last << voted
+    p yomu.metadata['Content-Type']
+    # p yomu.text
+    text_pages = yomu.text.split(/Вопрос:/)
+     text_pages.each do |page|
+       page.split(/\n/).each do |r|
+         next if r[/Поименное голосование. Сессия:/]
+         next if r[/Поименные голосования. Сессия:/]
+         next if r[/Поименное голосования. Сессия:/]
+         next if r[/MERGEFORMAT/]
+         next if r[/\tФ.И.О./]
+         next if r[/ФИО/]
+         next if r.strip == ""
+         next if r[/Решение/]
+         next if r[/~ПРОЦЕДУРНОЕ~/]
+         next if r[/~ОБЫЧНОЕ~/]
+         next if r[/�/]
+         if r[/Кворум -/]
+           votes.last[:result] = r.split(';').last.strip
+         elsif r[/\d+\.\d+\.\d{4}\s\d{2}:\d{2}:\d{2}/]
+           if votes.last[:date].nil? and not votes.last[:name].nil?
+             votes.last[:date] = r[/\d+\.\d+\.\d{4}\s\d{2}:\d{2}:\d{2}/]
+           else
+             votes << {name: r.gsub(/\d+\.\d+\.\d{4}\s\d{2}:\d{2}:\d{2}/,'').strip, votes: []}
+             votes.last[:date] = r[/\d+\.\d+\.\d{4}\s\d{2}:\d{2}:\d{2}/]
+           end
+         else
+           result = r.gsub(/\t/,'').strip
+           if result.split(' ').size == 3 and mp_res = $all_mp.serch_mp(result)
+               votes.last[:votes] << {mp: mp_res}
+           elsif result == "Горошко Елена Игорьевна" or result == "Дегтярев Николай Иванович" or result == "Коринько Иван Васильевич" or result == "Лесик Андрей Анатольевич"
+              votes.last[:votes] << {mp: result}
+           elsif result == "Зинченко Владимир Анатольевич"
+             votes.last[:votes] << {mp: "Зинченко Владимир Анатолиевич"}
+           elsif result.split(' ').size < 3
+             votes.last[:votes].last[:vote] = result
+           else
+             votes << {name: r.strip, votes: []}
+           end
+         end
        end
      end
-    votes << vote
-    end
     return votes
   end
 end

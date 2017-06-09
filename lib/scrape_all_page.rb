@@ -2,60 +2,27 @@ require_relative 'get_page'
 require_relative 'scrape_all_votes'
 require_relative 'get_mps'
 
-
 class GetPages
   def initialize
-    url = "https://www.lvivrada.gov.ua/zasidannia/rezultaty-golosuvan"
+    url = "http://www.city.kharkov.ua/uk/gorodskaya-vlast/gorodskoj-sovet/pomenne-golosuvannya.html"
     page = GetPage.page(url)
-    pagination = page.css('.k2Pagination').text.split(' ').last
-    @all_page = get_all_page(pagination)
+    @all_page = get_all_page(page)
     $all_mp = GetMp.new
   end
-  def get_all_page(size)
+  def get_all_page(page)
     hash = []
-    end_page = size.to_i - 1
-    (0..end_page).each do |p|
-      start = p * 10
-      uri = "https://www.lvivrada.gov.ua/zasidannia/rezultaty-golosuvan?start=#{start}"
-      result_votes_html= GetPage.page(uri)
-      result_votes_html.css('#itemListLeading a').each do |a|
-        text_date= a.text.split(' ').last
-
-        if text_date.include?('-')
-          date = Date.parse(text_date.split('-').last, '%d.%m.%Y')
-        else
-          date = Date.parse(text_date, '%d.%m.%Y')
-        end
-       hash << { date: date,
-                url: "https://www.lvivrada.gov.ua#{a[:href]}"
-        }
+    page.css('.container .container_department h3 a').each do |a|
+      if a[:href].include?("http:")
+        hash << { url: a[:href].gsub(/\n/,''), date: a.text }
+      else
+        hash << { url: "http://www.city.kharkov.ua" + a[:href].gsub(/\n/,''), date: a.text }
       end
+      #p a.text
     end
     return hash
   end
   def get_all_votes
     @all_page.each do |p|
-      p p[:date]
-      GetAllVotes.votes(p[:url], p[:date])
-    end
-  end
-  def get_votes(date)
-    page_votes_day = @all_page.find{|k,v| k[:date]== Date.parse(date, '%Y-%m-%d')}
-    GetAllVotes.votes(page_votes_day[:url], page_votes_day[:date])
-  end
-  def get_filter_start_votes(date)
-    page_votes_days = @all_page.find_all{|k,v| k[:date] >= Date.parse(date, '%Y-%m-%d')}
-    p page_votes_days
-    page_votes_days.each do |p|
-      p p[:date]
-      GetAllVotes.votes(p[:url], p[:date])
-    end
-  end
-  def get_filter_votes(start_date, end_date)
-    page_votes_days = @all_page.find_all{|k,v| k[:date] >= Date.parse(start_date, '%Y-%m-%d') and k[:date] < Date.parse(end_date, '%Y-%m-%d')}
-    p page_votes_days
-    page_votes_days.each do |p|
-      p p[:date]
       GetAllVotes.votes(p[:url], p[:date])
     end
   end

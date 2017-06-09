@@ -4,7 +4,7 @@ require_relative 'lib/voted'
 set :protection, except: [:json_csrf]
 
 get '/votes_events' do
-  json VoteEvent.all(:fields => [:date_caden], :unique => true, :order => :date_caden.desc).map{|d| d.date_caden}
+  json VoteEvent.all(:fields => [:date_caden], :unique => true, :order => :date_caden.asc).map{|d| d.date_caden}
 end
 get '/votes_events/:date' do
   events = VoteEvent.all(date_caden: params[:date])

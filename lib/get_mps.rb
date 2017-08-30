@@ -8,7 +8,11 @@ class GetMp
    name =full_name.gsub(/'/,'’').gsub(/ Депутатські повноваження складено/,'')
    data = @data_hash.find {|k| k["full_name"] == name  }
     unless data.nil?
-      return data["deputy_id"]
+       if data["deputy_id"] == "Дегтярев Николай Иванович"
+         return 2002
+       else
+         return data["deputy_id"]
+       end
     end
   end
 end

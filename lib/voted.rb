@@ -18,7 +18,7 @@ class Vote
   include DataMapper::Resource
 
   property :id,           Serial    # An auto-increment integer key
-  property :voter_id,     String
+  property :voter_id,     Integer
   property :result,       String
 
   belongs_to :vote_event

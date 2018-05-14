@@ -24,6 +24,7 @@ class GetAllVotes
            next if v.empty?
            vote = events.votes.new
            vote.voter_id = v[:mp]
+           p v
            vote.result = short_voted_result(v[:vote])
            vote.save
          end
@@ -37,6 +38,12 @@ class GetAllVotes
         За: "aye",
         Воздержался: "abstain"
     }
-    hash[:"#{result}"]
+    if hash[:"#{result}"].nil?
+      p result
+      return raise result
+    else
+      return hash[:"#{result}"]
+    end
+
   end
 end

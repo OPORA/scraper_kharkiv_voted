@@ -55,6 +55,7 @@ class ReadFile
          end
        end
      end
+    p votes
     return votes
   end
 end
